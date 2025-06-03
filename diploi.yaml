@@ -1,0 +1,27 @@
+diploiVersion: v1.0
+type: component
+name: n8n
+description: Official Diploi component for n8n
+
+contexts:
+  - name: app
+    identifier: app
+
+hosts:
+  - name: n8n
+    identifier: app
+    urlFormat: '[label].[default-domain]'
+
+connectionStrings:
+  - name: Internal Address
+    value: http://app.${DIPLOI_NAMESPACE}:5678
+    description: This address is for requests from within the deployment and is inaccessible externally.
+
+images:
+  - identifier: app
+    prebuildImage: ghcr.io/diploi/component-n8n:[tag]
+
+logs:
+  - name: n8n Log
+    type: log
+    labelSelector: app=app
