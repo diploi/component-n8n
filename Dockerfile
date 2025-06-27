@@ -6,12 +6,12 @@ WORKDIR ${FOLDER}
 
 COPY . /app
 
-RUN chown -R 1000:1000 /app
+# RUN chown -R 1000:1000 /app
 
-RUN groupadd -g 1000 devgroup && \
-    useradd -u 1000 -g 1000 -m devuser
+# RUN groupadd -g 1000 devgroup && \
+#     useradd -u 1000 -g 1000 -m devuser
 
-USER devuser
+# USER devuser
 
 EXPOSE 5678
 
