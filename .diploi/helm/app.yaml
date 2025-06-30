@@ -38,7 +38,7 @@ spec:
         - name: run-n8n
           image: {{ .Values.images.app }}
           imagePullPolicy: Always
-          command: ['node',"app/n8n/node_modules/n8n/bin/n8n"]
+          command: ['node',"n8n/node_modules/n8n/bin/n8n"]
           workingDir: /app/{{ .Values.identifier }}
           env:
           - name: N8N_ENV
