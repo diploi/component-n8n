@@ -20,7 +20,7 @@ environmentVariables:
     defaultValue: postgres
     type: string
   - identifier: DB_POSTGRESDB_HOST
-    defaultValue: postgresdb
+    defaultValue: postgres.postgres
     type: string
   - identifier: DB_POSTGRESDB_PORT
     defaultValue: 5432
@@ -32,7 +32,7 @@ environmentVariables:
     defaultValue: postgres
     type: string
   - identifier: DB_POSTGRESDB_SCHEMA
-    defaultValue: n8n
+    defaultValue: public
     type: string
 
 connectionStrings:
