@@ -31,14 +31,14 @@ spec:
       imagePullSecrets:
         - name: diploi-pull-secret
       {{- if eq .Values.stage "development"}}
-      securityContext:
-        runAsUser: 1000
-        runAsGroup: 1000
+      # securityContext:
+      #   runAsUser: 1000
+      #   runAsGroup: 1000
       initContainers:
         - name: run-n8n
           image: {{ .Values.images.app }}
           imagePullPolicy: Always
-          command: ['n8n']
+          command: ['node',"app/n8n/node_modules/n8n/bin/n8n"]
           workingDir: /app/{{ .Values.identifier }}
           env:
           - name: N8N_ENV
