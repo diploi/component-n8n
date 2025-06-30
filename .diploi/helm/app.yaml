@@ -34,11 +34,23 @@ spec:
       # securityContext:
       #   runAsUser: 1000
       #   runAsGroup: 1000
+      # initContainers:
+      #   - name: run-n8n
+      #     image: {{ .Values.images.app }}
+      #     imagePullPolicy: Always
+      #     command: ['node',"n8n/node_modules/n8n/bin/n8n"]
+      #     workingDir: /app/{{ .Values.identifier }}
+      #     env:
+      #     - name: N8N_ENV
+      #       value: development
+      #     volumeMounts:
+      #       - name: app-mount
+      #         mountPath: /app
       initContainers:
-        - name: run-n8n
+        - name: install-dependencies
           image: {{ .Values.images.app }}
           imagePullPolicy: Always
-          command: ['node',"n8n/node_modules/n8n/bin/n8n"]
+          command: ['npm', 'install']
           workingDir: /app/{{ .Values.identifier }}
           env:
           - name: N8N_ENV
