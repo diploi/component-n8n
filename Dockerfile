@@ -7,6 +7,8 @@ RUN apk add --no-cache libc6-compat
 COPY . /app
 WORKDIR ${FOLDER}
 
+RUN npm install
+
 EXPOSE 5678
 
 CMD ["npx","n8n"]
