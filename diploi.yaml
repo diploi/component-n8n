@@ -12,6 +12,29 @@ hosts:
     identifier: app
     urlFormat: '[label].[default-domain]'
 
+environmentVariables:
+  - identifier: DB_TYPE
+    defaultValue: postgresdb
+    type: string
+  - identifier: DB_POSTGRESDB_DATABASE
+    defaultValue: postgres
+    type: string
+  - identifier: DB_POSTGRESDB_HOST
+    defaultValue: postgresdb
+    type: string
+  - identifier: DB_POSTGRESDB_PORT
+    defaultValue: 5432
+    type: string
+  - identifier: DB_POSTGRESDB_USER
+    defaultValue: postgres
+    type: string
+  - identifier: DB_POSTGRESDB_PASSWORD
+    defaultValue: postgres
+    type: string
+  - identifier: DB_POSTGRESDB_SCHEMA
+    defaultValue: n8n
+    type: string
+
 connectionStrings:
   - name: Internal Address
     value: http://app.${DIPLOI_NAMESPACE}:5678
