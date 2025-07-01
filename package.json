@@ -1,4 +1,21 @@
 {
+  "name": "component-n8n",
+  "version": "1.0.0",
+  "description": "Diploi component for n8n",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/diploi/component-n8n.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/diploi/component-n8n/issues"
+  },
+  "homepage": "https://github.com/diploi/component-n8n#readme",
   "dependencies": {
     "n8n": "^1.99.1"
   }
