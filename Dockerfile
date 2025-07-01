@@ -24,8 +24,10 @@ COPY --from=deps ${FOLDER}/node_modules ./node_modules
 
 FROM base AS runner
 
-COPY --from=builder
+COPY --from=builder /app /app
+
 RUN chown -R 1000:1000 /app
+
 WORKDIR ${FOLDER}
 
 USER 1000:1000
