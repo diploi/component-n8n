@@ -2,24 +2,35 @@
 
 # n8n Component for Diploi
 
-A generic n8n component ready to automate tasks.
+A generic n8n component ready to be used for automating tasks.
 
-**More coming soon**
+This component was kickstarted running
+`npm install n8n`
+and it uses **PostgreSQL** by default.
+
+Uses the official [node:22-alpine](https://hub.docker.com/_/node/) Docker image and n8n ^1.99.1
 
 ## Operation
 
 ### Development
 
-**More coming soon**
+Will run first
+`apk add --no-cache libc6-compat`
+and next
+`npm install`
+when component is first initialized, after that the image runs `npx n8n` when the deployment is started.
 
 ### Production
 
-**More coming soon**
+Will build a production ready image. Image runs
+`apk add --no-cache libc6-compat`
+to install all necessary dependencies and
+`npm ci` to install the necessary packages, to then run
+`npx n8n`to start the deployment
 
 #### IMPORTANT
-
-**More coming soon**
+- This component is not intended for n8n custom development
 
 ## Links
 
-**More coming soon**
+- [n8n docs](https://docs.n8n.io/)
