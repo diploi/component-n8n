@@ -3,10 +3,17 @@ FROM node:22-alpine
 ARG FOLDER=/app
 RUN apk add --no-cache libc6-compat
 
+RUN groupadd -g 1000 devgroup && \
+    useradd -u 1000 -g 1000 -m devuser
+
 COPY . /app
+
+RUN chown -R devuser:devgroup /app
+
 WORKDIR ${FOLDER}
 
-USER 1000:1000
+USER devuser
+
 EXPOSE 5678
 
 CMD ["npx","n8n"]
