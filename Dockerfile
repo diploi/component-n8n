@@ -27,10 +27,7 @@ FROM base AS runner
 COPY --from=builder --chown=1000:1000 /app /app
 WORKDIR ${FOLDER}
 
-# ENV NODE_ENV=production
-
-# USER 1000:1000
-
+USER 1000:1000
 
 EXPOSE 5678
 
