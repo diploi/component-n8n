@@ -24,14 +24,10 @@ COPY --from=deps ${FOLDER}/node_modules ./node_modules
 
 FROM base AS runner
 
-RUN apk add --no-cache shadow \
-  && groupadd -g 1000 devgroup \
-  && useradd -u 1000 -g 1000 -m devuser
-
-COPY --from=builder --chown=devuser:devgroup /app /app
+COPY --from=builder --chown=1000:1000 /app /app
 WORKDIR ${FOLDER}
 
-USER devuser
+USER 1000:1000
 
 EXPOSE 5678
 
