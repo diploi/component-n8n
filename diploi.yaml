@@ -46,10 +46,6 @@ parameterGroups:
         identifier: DB_POSTGRESDB_SCHEMA
         defaultValue: public
         type: string
-      - name: WEBHOOK_URL
-        identifier: WEBHOOK_URL
-        defaultValue: '[label].[default-domain]'
-        type: string
 
 
 connectionStrings:
