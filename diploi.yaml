@@ -12,28 +12,45 @@ hosts:
     identifier: app
     urlFormat: '[label].[default-domain]'
 
-environmentVariables:
-  - identifier: DB_TYPE
-    defaultValue: postgresdb
-    type: string
-  - identifier: DB_POSTGRESDB_DATABASE
-    defaultValue: postgres
-    type: string
-  - identifier: DB_POSTGRESDB_HOST
-    defaultValue: postgres.postgres
-    type: string
-  - identifier: DB_POSTGRESDB_PORT
-    defaultValue: 5432
-    type: string
-  - identifier: DB_POSTGRESDB_USER
-    defaultValue: postgres
-    type: string
-  - identifier: DB_POSTGRESDB_PASSWORD
-    defaultValue: postgres
-    type: string
-  - identifier: DB_POSTGRESDB_SCHEMA
-    defaultValue: public
-    type: string
+parameterGroups:
+  - name: Connection
+    identifier: postgres
+    description: Superuser & connection configuration
+    parameters:
+      - name: DB_TYPE
+        identifier: DB_TYPE
+        defaultValue: postgresdb
+        type: string
+        readOnly: true
+      - name: DB_POSTGRESDB_DATABASE
+        identifier: DB_POSTGRESDB_DATABASE
+        defaultValue: postgres
+        type: string
+      - name: DB_POSTGRESDB_HOST
+        identifier: DB_POSTGRESDB_HOST
+        defaultValue: postgres.postgres
+        type: string
+      - name: DB_POSTGRESDB_PORT
+        identifier: DB_POSTGRESDB_PORT
+        defaultValue: 5432
+        type: integer
+      - name: DB_POSTGRESDB_USER
+        identifier: DB_POSTGRESDB_USER
+        defaultValue: postgres
+        type: string
+      - name: DB_POSTGRESDB_PASSWORD
+        identifier: DB_POSTGRESDB_PASSWORD
+        defaultValue: postgres
+        type: string
+      - name: DB_POSTGRESDB_SCHEMA
+        identifier: DB_POSTGRESDB_SCHEMA
+        defaultValue: public
+        type: string
+      - name: WEBHOOK_URL
+        identifier: WEBHOOK_URL
+        defaultValue: '[label].[default-domain]'
+        type: string
+
 
 connectionStrings:
   - name: Internal Address
