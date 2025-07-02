@@ -46,6 +46,16 @@ parameterGroups:
         identifier: DB_POSTGRESDB_SCHEMA
         defaultValue: public
         type: string
+      - name: N8N_HOST
+        identifier: N8N_HOST
+        defaultValue: http://app.${DIPLOI_NAMESPACE}
+        type: string
+        readOnly: true
+      - name: N8N_PORT
+        identifier: N8N_PORT
+        defaultValue: 5678
+        type: string
+        readOnly: true
 
 
 connectionStrings:
