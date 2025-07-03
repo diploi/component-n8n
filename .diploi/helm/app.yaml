@@ -51,8 +51,8 @@ spec:
         - name: app
           image: {{ .Values.images.app }}
           imagePullPolicy: Always
-            ports:
-              - containerPort: 5678
+          ports:
+            - containerPort: 5678
           {{- if eq .Values.stage "development" }}
           workingDir: /app/{{ .Values.identifier }}
           {{- end }}
