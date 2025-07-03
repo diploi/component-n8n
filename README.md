@@ -8,7 +8,7 @@ This component was kickstarted running
 `npm install n8n`
 and it uses **PostgreSQL** by default.
 
-Uses the official [node:22-alpine](https://hub.docker.com/_/node/) Docker image and n8n ^1.99.1
+Uses the official [node:22-alpine](https://hub.docker.com/_/node/) Docker image and **n8n 1.99.1**
 
 ## Operation
 
@@ -29,7 +29,7 @@ to install all necessary dependencies and
 `npx n8n`to start the deployment
 
 #### IMPORTANT
-- This component is not intended for n8n custom development
+- This component is not intended for n8n custom development, because it uses n8n as a node_module
 
 ## Links
 

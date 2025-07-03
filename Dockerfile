@@ -8,12 +8,7 @@ RUN apk add --no-cache libc6-compat
 COPY . /app
 WORKDIR ${FOLDER}
 
-RUN \
-  if [ -f yarn.lock ]; then yarn --frozen-lockfile; \
-  elif [ -f package-lock.json ]; then npm ci; \
-  elif [ -f pnpm-lock.yaml ]; then corepack enable pnpm && pnpm i --frozen-lockfile; \
-  else echo "Lockfile not found." && exit 1; \
-  fi
+RUN npm install
 
 RUN mkdir -p node_modules
 
