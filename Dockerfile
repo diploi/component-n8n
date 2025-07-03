@@ -10,15 +10,15 @@ RUN npm install
 
 COPY . .
 
-FROM node:22-alpine AS deps
+FROM node:22-alpine AS runner
 
 ARG FOLDER=/app
 
 WORKDIR ${FOLDER}
 
-COPY --from=builder /app /app
+COPY --from=base ${FOLDER} ${FOLDER}
 
-RUN chown -R 1000:1000 /app
+RUN chown -R 1000:1000 ${FOLDER}
 
 USER 1000:1000
 
