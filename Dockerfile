@@ -2,27 +2,23 @@ FROM node:22-alpine AS base
 
 ARG FOLDER=/app
 
-FROM base AS deps
-
-COPY . /app
 WORKDIR ${FOLDER}
+
+COPY package*.json ./
 
 RUN npm install
 
-RUN mkdir -p node_modules
+COPY . .
 
-FROM base AS builder
-COPY . /app
+FROM node:22-alpine AS deps
+
+ARG FOLDER=/app
+
 WORKDIR ${FOLDER}
-COPY --from=deps ${FOLDER}/node_modules ./node_modules
-
-FROM base AS runner
 
 COPY --from=builder /app /app
 
 RUN chown -R 1000:1000 /app
-
-WORKDIR ${FOLDER}
 
 USER 1000:1000
 
