@@ -3,7 +3,6 @@ FROM node:22-alpine AS base
 ARG FOLDER=/app
 
 FROM base AS deps
-RUN apk add --no-cache libc6-compat
 
 COPY . /app
 WORKDIR ${FOLDER}
