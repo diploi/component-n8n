@@ -4,7 +4,6 @@
 
 [![launch with diploi badge](https://diploi.com/launch.svg)](https://diploi.com/component/deno)
 [![component on diploi badge](https://diploi.com/component.svg)](https://diploi.com/component/deno)
-[![latest tag badge](https://badgen.net/github/tag/diploi/component-n8n)](https://diploi.com/component/n8n)
 
 A generic n8n component ready to be used for automating tasks.
 
