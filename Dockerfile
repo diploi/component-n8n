@@ -2,9 +2,9 @@ FROM node:22-alpine AS base
 
 ARG FOLDER=/app
 
-WORKDIR ${FOLDER}
+COPY . /app
 
-COPY package*.json ./
+WORKDIR ${FOLDER}
 
 RUN npm install
 
