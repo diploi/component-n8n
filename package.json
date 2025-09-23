@@ -17,6 +17,6 @@
   },
   "homepage": "https://github.com/diploi/component-n8n#readme",
   "dependencies": {
-    "n8n": "1.112.3"
+    "n8n": "1.99.1"
   }
 }
