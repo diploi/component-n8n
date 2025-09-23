@@ -17,34 +17,9 @@ parameterGroups:
     identifier: postgres
     description: Superuser & connection configuration
     parameters:
-      - name: DB_TYPE
-        identifier: DB_TYPE
-        defaultValue: postgresdb
-        type: string
-        readOnly: true
       - name: DB_POSTGRESDB_DATABASE
         identifier: DB_POSTGRESDB_DATABASE
-        defaultValue: postgres
-        type: string
-      - name: DB_POSTGRESDB_HOST
-        identifier: DB_POSTGRESDB_HOST
-        defaultValue: postgres.postgres
-        type: string
-      - name: DB_POSTGRESDB_PORT
-        identifier: DB_POSTGRESDB_PORT
-        defaultValue: 5432
-        type: integer
-      - name: DB_POSTGRESDB_USER
-        identifier: DB_POSTGRESDB_USER
-        defaultValue: postgres
-        type: string
-      - name: DB_POSTGRESDB_PASSWORD
-        identifier: DB_POSTGRESDB_PASSWORD
-        defaultValue: postgres
-        type: string
-      - name: DB_POSTGRESDB_SCHEMA
-        identifier: DB_POSTGRESDB_SCHEMA
-        defaultValue: public
+        defaultValue: n8n
         type: string
       - name: N8N_HOST
         identifier: N8N_HOST
@@ -57,6 +32,11 @@ parameterGroups:
         type: string
         readOnly: true
 
+environmentVariables:
+  - identifier: DB_TYPE
+    defaultValue: postgresdb
+  - identifier: DB_POSTGRESDB_SCHEMA
+    defaultValue: public
 
 connectionStrings:
   - name: Internal Address
@@ -71,3 +51,13 @@ logs:
   - name: n8n Log
     type: log
     labelSelector: app=app
+
+dependencies:
+  - identifier: postgres
+    package: https://github.com/diploi/addon-postgres#v17.2
+    env:
+      include:
+        - POSTGRES_HOST:DB_POSTGRESDB_HOST
+        - POSTGRES_PORT:DB_POSTGRESDB_PORT
+        - POSTGRES_USER:DB_POSTGRESDB_USER
+        - POSTGRES_PASSWORD:DB_POSTGRESDB_PASSWORD
