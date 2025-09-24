@@ -36,10 +36,10 @@ spec:
         runAsGroup: 1000
       initContainers:
         - name: create-db
-          # securityContext:
-          #   runAsUser: root
-          #   runAsGroup: root
           image: postgres:13
+          securityContext:
+            runAsUser: root
+            runAsGroup: root
           env:
             - name: PGPASSWORD
               value: "{{ .Values.DB_POSTGRESDB_PASSWORD }}"
