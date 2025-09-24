@@ -38,8 +38,8 @@ spec:
         - name: create-db
           image: postgres:13
           securityContext:
-            runAsUser: root
-            runAsGroup: root
+            runAsUser: 0
+            runAsGroup: 0
           env:
             - name: PGPASSWORD
               value: "{{ .Values.DB_POSTGRESDB_PASSWORD }}"
