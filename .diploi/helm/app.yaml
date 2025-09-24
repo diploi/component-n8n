@@ -42,7 +42,7 @@ spec:
             runAsGroup: 0
           env:
             - name: PGPASSWORD
-              value: "{{ .Values.DB_POSTGRESDB_PASSWORD }}"
+              value: "{{ .Values.envMap.DB_POSTGRESDB_PASSWORD.value }}"
           command:
             - sh
             - -c
