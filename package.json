@@ -1,7 +1,7 @@
 {
   "name": "component-n8n",
   "version": "1.0.0",
-  "description": "Diploi component for n8n, not inteded for custom development",
+  "description": "Diploi component for n8n",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
