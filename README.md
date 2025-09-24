@@ -2,8 +2,8 @@
 
 # n8n Component for Diploi
 
-[![launch with diploi badge](https://diploi.com/launch.svg)](https://diploi.com/component/deno)
-[![component on diploi badge](https://diploi.com/component.svg)](https://diploi.com/component/deno)
+[![launch with diploi badge](https://diploi.com/launch.svg)](https://diploi.com/component/n8n)
+[![component on diploi badge](https://diploi.com/component.svg)](https://diploi.com/component/n8n)
 [![latest tag badge](https://badgen.net/github/tag/diploi/component-n8n)](https://diploi.com/component/n8n)
 
 Start a demo, no card required https://diploi.com/component/n8n
