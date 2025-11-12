@@ -51,4 +51,5 @@ to install all necessary dependencies and
 
 ## Links
 
+- [Adding n8n to a project](https://docs.diploi.com/building/components/n8n)
 - [n8n docs](https://docs.n8n.io/)
