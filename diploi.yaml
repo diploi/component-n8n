@@ -31,6 +31,14 @@ parameterGroups:
         defaultValue: 5678
         type: string
         readOnly: true
+  - name: Config
+    identifier: config
+    description: n8n onfiguration variables
+    parameters:
+      - name: N8N_ENCRYPTION_KEY
+        identifier: N8N_ENCRYPTION_KEY
+        defaultValue: '${generate-random-password:42}'
+        type: secret
 
 environmentVariables:
   - identifier: DB_TYPE
