@@ -1,27 +1,21 @@
-FROM node:22-alpine AS base
+FROM docker.n8n.io/n8nio/n8n:2.1.4
 
 ARG FOLDER=/app
 
 COPY . /app
 
-WORKDIR ${FOLDER}
-
-RUN npm install
-
-COPY . .
-
-FROM node:22-alpine AS runner
-
-ARG FOLDER=/app
+RUN chown -R 1000:1000 /app
 
 WORKDIR ${FOLDER}
-
-COPY --from=base ${FOLDER} ${FOLDER}
-
-RUN chown -R 1000:1000 ${FOLDER}
 
 USER 1000:1000
 
 EXPOSE 5678
 
-CMD ["npx","n8n"]
+ENV TZ=UTC
+
+ENV N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+
+ENV N8N_RUNNERS_ENABLED=true
+
+ENV DB_TYPE=postgresdb
