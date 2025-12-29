@@ -4,6 +4,8 @@ ARG FOLDER=/app
 
 COPY . /app
 
+USER root
+
 RUN chown -R 1000:1000 /app
 
 WORKDIR ${FOLDER}
