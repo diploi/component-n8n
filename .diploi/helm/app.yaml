@@ -22,6 +22,20 @@ spec:
       terminationGracePeriodSeconds: 10
       imagePullSecrets:
         - name: diploi-pull-secret
+      initContainers:
+        - name: create-db
+          image: postgres:17.2
+          securityContext:
+            runAsUser: 0
+            runAsGroup: 0
+          env:
+            - name: PGPASSWORD
+              value: "{{ .Values.envMap.DB_POSTGRESDB_PASSWORD.value }}"
+          command:
+            - sh
+            - -c
+            - |
+              psql -h {{ .Values.envMap.DB_POSTGRESDB_HOST.value }} -U {{ .Values.envMap.DB_POSTGRESDB_USER.value }} -tc "SELECT 1 FROM pg_database WHERE datname = '{{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}'" | grep -q 1 || psql -h {{ .Values.envMap.DB_POSTGRESDB_HOST.value }} -U {{ .Values.envMap.DB_POSTGRESDB_USER.value }} -c "CREATE DATABASE {{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}"
       containers:
         - name: app
           image: {{ .Values.images.app }}

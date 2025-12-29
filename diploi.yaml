@@ -17,6 +17,10 @@ parameterGroups:
     identifier: postgres
     description: Superuser & connection configuration
     parameters:
+      - name: DB_POSTGRESDB_DATABASE
+        identifier: DB_POSTGRESDB_DATABASE
+        defaultValue: n8n
+        type: string
       - name: N8N_HOST
         identifier: N8N_HOST
         defaultValue: http://app.${DIPLOI_NAMESPACE}
@@ -62,4 +66,3 @@ dependencies:
         - POSTGRES_PORT:DB_POSTGRESDB_PORT
         - POSTGRES_USER:DB_POSTGRESDB_USER
         - POSTGRES_PASSWORD:DB_POSTGRESDB_PASSWORD
-        - POSTGRES_DB:DB_POSTGRESDB_DATABASE
