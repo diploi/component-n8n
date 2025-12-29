@@ -37,25 +37,24 @@ spec:
             - |
               set -e
 
-              echo "Checking if database exists..."
+              echo "Checking if database {{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }} exists..."
 
-              if psql -h {{ .Values.envMap.DB_POSTGRESDB_HOST.value }} \
-                      -U {{ .Values.envMap.DB_POSTGRESDB_USER.value }} \
-                      -d postgres \
-                      -w \
-                      -tc "SELECT 1 FROM pg_database WHERE datname='{{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}'" \
-                      | grep -q 1; then
-                  echo "Database '{{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}' already exists, exiting initContainers."
-                  exit 0
+              if psql "host={{ .Values.envMap.DB_POSTGRESDB_HOST.value }} \
+                      user={{ .Values.envMap.DB_POSTGRESDB_USER.value }} \
+                      dbname=postgres \
+                      connect_timeout=3" \
+                  -tAc "SELECT 1 FROM pg_database WHERE datname='{{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}'" \
+                | grep -q 1; then
+                echo "Database already exists, exiting initContainer"
+                exit 0
               fi
+              echo "Database does not exist, creating database {{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}..."
+              psql "host={{ .Values.envMap.DB_POSTGRESDB_HOST.value }} \
+                    user={{ .Values.envMap.DB_POSTGRESDB_USER.value }} \
+                    dbname=postgres \
+                    connect_timeout=3" \
+                -c "CREATE DATABASE {{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}"
 
-              echo "Database '{{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}' does not exist. Creating..."
-              psql -h {{ .Values.envMap.DB_POSTGRESDB_HOST.value }} \
-                  -U {{ .Values.envMap.DB_POSTGRESDB_USER.value }} \
-                  -d postgres \
-                  -w \
-                  --connect-timeout=3 \
-                  -c "CREATE DATABASE {{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}"
       containers:
         - name: app
           image: {{ .Values.images.app }}
