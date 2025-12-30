@@ -48,7 +48,9 @@ spec:
                 echo "Database already exists, exiting initContainer"
                 exit 0
               fi
+              
               echo "Database does not exist, creating database {{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}..."
+              
               psql "host={{ .Values.envMap.DB_POSTGRESDB_HOST.value }} \
                     user={{ .Values.envMap.DB_POSTGRESDB_USER.value }} \
                     dbname=postgres \

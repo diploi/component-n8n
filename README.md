@@ -10,11 +10,10 @@ Start a demo, no card required https://diploi.com/component/n8n
 
 A generic n8n component ready to be used for automating tasks.
 
-This component was kickstarted running
-`npm install n8n`
+This component uses latest stable N8N docker version 2.1.4
 and it uses **PostgreSQL** by default.
 
-Uses the official [node:22-alpine](https://hub.docker.com/_/node/) Docker image and **n8n**
+This component is based on the official [n8n Docker image](https://hub.docker.com/r/n8nio/n8n), ensuring compatibility and stability with the latest **n8n** releases.
 
 ## Operation
 
@@ -29,21 +28,10 @@ Uses the official [node:22-alpine](https://hub.docker.com/_/node/) Docker image 
 Link to guide, explains how to add a custom domain and launch to production
 https://diploi.com/blog/hosting_n8n
 
-### Development
 
-Will run first
-`apk add --no-cache libc6-compat`
-and next
-`npm install`
-when component is first initialized, after that the image runs `npx n8n` when the deployment is started.
+### Development and Production
 
-### Production
-
-Will build a production ready image. Image runs
-`apk add --no-cache libc6-compat`
-to install all necessary dependencies and
-`npm ci` to install the necessary packages, to then run
-`npx n8n`to start the deployment
+For development and production, the component's image is built using the official n8n stable release (version 2.1.4), ensuring reliability and optimal performance in deployment environments.
 
 #### IMPORTANT
 - If you want to create your own custom nodes, you can follow n8n's official documentation
