@@ -1,9 +1,5 @@
 apiVersion: apps/v1
-{{- if eq .Values.stage "development"}}
-kind: StatefulSet
-{{- else }}
 kind: Deployment
-{{- end }}
 metadata:
   name: app
   labels:
@@ -12,15 +8,11 @@ spec:
   selector:
     matchLabels:
       app: app
-  {{- if eq .Values.stage "development"}}
-  serviceName: app
-  {{- else }}
   strategy:
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 25%
       maxSurge: 25%
-  {{- end }}
   replicas: {{ ternary 1 0 .Values.enabled }}
   template:
     metadata:
@@ -30,14 +22,9 @@ spec:
       terminationGracePeriodSeconds: 10
       imagePullSecrets:
         - name: diploi-pull-secret
-      {{- if eq .Values.stage "development"}}
-      securityContext:
-        runAsUser: 1000
-        runAsGroup: 1000
-      {{- end }}
       initContainers:
         - name: create-db
-          image: postgres:13
+          image: postgres:17.2
           securityContext:
             runAsUser: 0
             runAsGroup: 0
@@ -48,29 +35,34 @@ spec:
             - sh
             - -c
             - |
-              psql -h {{ .Values.envMap.DB_POSTGRESDB_HOST.value }} -U {{ .Values.envMap.DB_POSTGRESDB_USER.value }} -tc "SELECT 1 FROM pg_database WHERE datname = '{{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}'" | grep -q 1 || psql -h {{ .Values.envMap.DB_POSTGRESDB_HOST.value }} -U {{ .Values.envMap.DB_POSTGRESDB_USER.value }} -c "CREATE DATABASE {{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}"
-        {{- if eq .Values.stage "development"}}
-        - name: install-dependencies
-          image: {{ .Values.images.app }}
-          imagePullPolicy: Always
-          command: ['npm', 'install']
-          workingDir: /app/{{ .Values.identifier }}
-          env:
-          - name: N8N_ENV
-            value: development
-          volumeMounts:
-            - name: app-mount
-              mountPath: /app
-        {{- end }}
+              set -e
+
+              echo "Checking if database {{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }} exists..."
+
+              if psql "host={{ .Values.envMap.DB_POSTGRESDB_HOST.value }} \
+                      user={{ .Values.envMap.DB_POSTGRESDB_USER.value }} \
+                      dbname=postgres \
+                      connect_timeout=3" \
+                  -tAc "SELECT 1 FROM pg_database WHERE datname='{{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}'" \
+                | grep -q 1; then
+                echo "Database already exists, exiting initContainer"
+                exit 0
+              fi
+              
+              echo "Database does not exist, creating database {{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}..."
+              
+              psql "host={{ .Values.envMap.DB_POSTGRESDB_HOST.value }} \
+                    user={{ .Values.envMap.DB_POSTGRESDB_USER.value }} \
+                    dbname=postgres \
+                    connect_timeout=3" \
+                -c "CREATE DATABASE {{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}"
+
       containers:
         - name: app
           image: {{ .Values.images.app }}
           imagePullPolicy: Always
           ports:
             - containerPort: 5678
-          {{- if eq .Values.stage "development" }}
-          workingDir: /app/{{ .Values.identifier }}
-          {{- end }}
           env:
             {{- range .Values.env }}
             - name: {{ .identifier }}
@@ -82,14 +74,3 @@ spec:
               value: https://{{ .Values.hosts.app }}
             - name: STAGE
               value: {{ .Values.stage }}
-          volumeMounts:
-            {{- if hasKey .Values.storage "code" }}
-            - name: app-mount
-              mountPath: /app
-            {{- end }}
-      volumes:
-        {{- if hasKey .Values.storage "code" }}
-        - name: app-mount
-          hostPath:
-            path: {{ .Values.storage.code.hostPath }}
-        {{- end }}

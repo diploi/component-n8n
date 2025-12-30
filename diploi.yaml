@@ -26,11 +26,6 @@ parameterGroups:
         defaultValue: http://app.${DIPLOI_NAMESPACE}
         type: string
         readOnly: true
-      - name: N8N_PORT
-        identifier: N8N_PORT
-        defaultValue: 5678
-        type: string
-        readOnly: true
   - name: Config
     identifier: config
     description: n8n onfiguration variables
@@ -45,7 +40,9 @@ environmentVariables:
     defaultValue: postgresdb
   - identifier: DB_POSTGRESDB_SCHEMA
     defaultValue: public
-
+  - identifier: TZ
+    defaultValue: UTC
+    
 connectionStrings:
   - name: Internal Address
     value: http://app.${DIPLOI_NAMESPACE}:5678
