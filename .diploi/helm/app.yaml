@@ -24,7 +24,7 @@ spec:
         - name: diploi-pull-secret
       initContainers:
         - name: create-db
-          image: postgres:17.2
+          image: postgres:18.3
           securityContext:
             runAsUser: 0
             runAsGroup: 0
