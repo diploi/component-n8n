@@ -10,7 +10,7 @@ Start a demo, no card required https://diploi.com/component/n8n
 
 A generic n8n component ready to be used for automating tasks.
 
-This component uses latest stable N8N docker version 2.1.4
+This component uses latest stable N8N docker version
 and it uses **PostgreSQL** by default.
 
 This component is based on the official [n8n Docker image](https://hub.docker.com/r/n8nio/n8n), ensuring compatibility and stability with the latest **n8n** releases.
@@ -31,7 +31,7 @@ https://diploi.com/blog/hosting_n8n
 
 ### Development and Production
 
-For development and production, the component's image is built using the official n8n stable release (version 2.1.4), ensuring reliability and optimal performance in deployment environments.
+For development and production, the component's image is built using the official n8n stable release, ensuring reliability and optimal performance in deployment environments.
 
 #### IMPORTANT
 - If you want to create your own custom nodes, you can follow n8n's official documentation
