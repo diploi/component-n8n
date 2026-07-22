@@ -40,6 +40,10 @@ environmentVariables:
     defaultValue: public
   - identifier: TZ
     defaultValue: UTC
+  - identifier: N8N_SAMESITE_COOKIE
+    defaultValue: none
+  - identifier: N8N_SECURE_COOKIE
+    defaultValue: true
     
 images:
   - identifier: app
