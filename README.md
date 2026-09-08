@@ -28,14 +28,27 @@ This component is based on the official [n8n Docker image](https://hub.docker.co
 Link to guide, explains how to add a custom domain and launch to production
 https://diploi.com/blog/hosting_n8n
 
+### Configure a custom base URL
+
+1. Open the n8n web interface and create a new custom credential.
+2. In the DevPod terminal, run the following command to find your Diploi base URL and access token:
+
+   ```bash
+   printenv | grep DIPLOI
+   ```
+
+3. Return to n8n and use the retrieved values to configure your custom base URL. For detailed instructions, see the [n8n community guide](https://community.n8n.io/t/custom-ai-provider-in-agent-node-or-custom-base-url/93488?tl=en).
+
+> Keep your access token private and do not share it publicly.
 
 ### Development and Production
 
 For development and production, the component's image is built using the official n8n stable release, ensuring reliability and optimal performance in deployment environments.
 
 #### IMPORTANT
+
 - If you want to create your own custom nodes, you can follow n8n's official documentation
-    https://docs.n8n.io/integrations/creating-nodes/build/
+  https://docs.n8n.io/integrations/creating-nodes/build/
 
 ## Links
 
