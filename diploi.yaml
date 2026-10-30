@@ -86,6 +86,12 @@ environmentVariables:
   # n8n's MCP server limits requests per address, and every request of the prompt tab's agent comes from the Diploi core's
   - identifier: N8N_MCP_SERVER_RATE_LIMIT
     defaultValue: 0
+  # The Code node runs in the pod's runners container, which signs in to n8n with the token
+  - identifier: N8N_RUNNERS_MODE
+    defaultValue: external
+  - identifier: N8N_RUNNERS_AUTH_TOKEN
+    defaultValue: '${generate-random-bytes:32}'
+    type: secret
   # The Diploi AI proxy, for the credential "Diploi AI"
   - identifier: DIPLOI_AI_URL
     defaultValue: '{diploi-ai-gateway-url}/anthropic'

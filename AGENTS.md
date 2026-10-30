@@ -12,9 +12,9 @@
   **Environment** tab. Every `N8N_*` and `DB_*` variable is an
   [n8n setting](https://docs.n8n.io/hosting/configuration/environment-variables/). A change takes effect when the
   component restarts.
-- Serves on port **5678** in every stage. Every stage runs the same image. The pod has a second container, `setup`,
-  which creates n8n's database, sets n8n up on its first start and then waits. Its log
-  (`diploi logs <identifier> -c setup`) says what the setup did.
+- Serves on port **5678** in every stage. Every stage runs the same image. The pod has two more containers: `runners`,
+  which runs the Code node's JavaScript and Python, and `setup`, which creates n8n's database, sets n8n up on its
+  first start and then waits. The setup's log (`diploi logs <identifier> -c setup`) says what it did.
 - Login is `INITIAL_ADMIN_EMAIL` with `INITIAL_ADMIN_PASSWORD`, under **Admin login** in the Setup tab. Both are only
   read on the first start. The password is a secret: point the user to the Setup tab, never print it.
 - Never change `N8N_ENCRYPTION_KEY`: n8n could no longer read the credentials it encrypted with it.
@@ -28,7 +28,8 @@
 - n8n Assistant, n8n's own AI chat, is switched off: it needs a code sandbox, which this component does not set up.
   Build and fix workflows through the MCP server instead.
 - Code nodes cannot read environment variables (`N8N_BLOCK_ENV_ACCESS_IN_NODE` is on by default). Put secrets in
-  credentials.
+  credentials. Python in a Code node cannot import modules, not even from the standard library, and JavaScript can
+  only use `crypto` and `moment`: prefer n8n's nodes and expressions to code.
 
 ## Diploi
 

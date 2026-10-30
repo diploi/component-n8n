@@ -49,6 +49,14 @@ spec:
           volumeMounts:
             - name: state
               mountPath: /diploi-state
+        # Runs the Code node's JavaScript and Python, which n8n hands it on 127.0.0.1:5679. Only the token, so that code
+        # in a Code node cannot read the deployment's other variables. Keep the tag at the n8n version in diploi.yaml.
+        - name: runners
+          image: n8nio/runners:2.45.6
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: N8N_RUNNERS_AUTH_TOKEN
+              value: {{ .Values.envMap.N8N_RUNNERS_AUTH_TOKEN.value | quote }}
         # Creates the database, sets n8n up on its first start and gives the prompt tab's agent and the AI nodes access, then waits
         - name: setup
           image: alpine:3.22
