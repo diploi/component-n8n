@@ -47,17 +47,12 @@ parameterGroups:
         defaultValue: '${generate-random-password:42}'
         type: secret
 
-  # app.yaml gives n8n Assistant the model and the proxy only while the switch is on
   - name: AI
     identifier: DIPLOI_AI_ENABLED
-    description: n8n Assistant and the "Diploi AI" credential for AI nodes, through the Diploi AI proxy. Billed to your account as AI usage.
+    description: The "Diploi AI" credential for AI nodes, through the Diploi AI proxy. Billed to your account as AI usage.
     toggleable: true
     defaultValue: true
-    parameters:
-      - name: Assistant model
-        identifier: DIPLOI_AI_MODEL
-        defaultValue: anthropic/claude-sonnet-5-5
-        type: string
+    parameters: []
 
   - name: Prompt tab
     identifier: DIPLOI_AGENT_ENABLED
@@ -91,7 +86,7 @@ environmentVariables:
   # n8n's MCP server limits requests per address, and every request of the prompt tab's agent comes from the Diploi core's
   - identifier: N8N_MCP_SERVER_RATE_LIMIT
     defaultValue: 0
-  # The Diploi AI proxy, for the credential "Diploi AI" and n8n Assistant
+  # The Diploi AI proxy, for the credential "Diploi AI"
   - identifier: DIPLOI_AI_URL
     defaultValue: '{diploi-ai-gateway-url}/anthropic'
   - identifier: DIPLOI_AI_TOKEN

@@ -47,19 +47,29 @@ data:
       echo "$response"
     }
 
-    # n8n's MCP server is off until it is switched on, and so is exposing new workflows to it. n8n reads both settings
-    # when it starts, so a later start writes them before n8n does, and leaves a value the owner chose.
-    enable_mcp_before_start() {
-      pg -d "$DB" <<'SQL'
-    SELECT $$INSERT INTO settings (key, value, "loadOnStartup")
-      VALUES ('mcp.access.enabled', 'true', true), ('mcp.autoExposeNewWorkflows', 'true', true)
-      ON CONFLICT (key) DO NOTHING$$
-    WHERE to_regclass('settings') IS NOT NULL
-    \gexec
+    # n8n Assistant needs a code sandbox, which this component does not set up, so it starts switched off: n8n would
+    # otherwise open its setup on every login. n8n's MCP server, and exposing new workflows to it, start switched on
+    # for the prompt tab. n8n reads these settings when it starts, so a later start writes them before n8n does, and
+    # leaves a value the owner chose.
+    write_settings_before_start() {
+      local mcp=false
+      [ "${DIPLOI_AGENT_ENABLED:-true}" != true ] || mcp=true
+      pg -d "$DB" -v mcp="$mcp" <<'SQL'
+    SELECT to_regclass('settings') IS NOT NULL AS has_settings
+    \gset
+    \if :has_settings
+    INSERT INTO settings (key, value, "loadOnStartup") VALUES ('instanceAi.settings', '{"enabled": false}', true)
+    ON CONFLICT (key) DO NOTHING;
+    \if :mcp
+    INSERT INTO settings (key, value, "loadOnStartup")
+    VALUES ('mcp.access.enabled', 'true', true), ('mcp.autoExposeNewWorkflows', 'true', true)
+    ON CONFLICT (key) DO NOTHING;
+    \endif
+    \endif
     SQL
     }
 
-    # On the first start the settings do not exist before n8n creates its tables, so the owner switches them on
+    # On the first start the settings do not exist before n8n creates its tables, so the owner sets them
     first_run_setup() {
       local session
       log "First start: creating the owner $INITIAL_ADMIN_EMAIL"
@@ -71,6 +81,8 @@ data:
           request -D - -o /dev/null -H 'browser-id: diploi-setup' --data @- "$BASE/rest/owner/setup" |
           grep -io 'n8n-auth=[^;]*'
       )
+      request -X PUT -H 'browser-id: diploi-setup' -H "Cookie: $session" \
+        --data '{"enabled": false}' "$BASE/rest/instance-ai/settings" >/dev/null
       if [ "${DIPLOI_AGENT_ENABLED:-true}" = true ]; then
         request -X PATCH -H 'browser-id: diploi-setup' -H "Cookie: $session" \
           --data '{"mcpAccessEnabled": true, "autoExposeNewWorkflows": true}' "$BASE/rest/mcp/settings" >/dev/null
@@ -181,7 +193,7 @@ data:
     SELECT format('CREATE DATABASE %I', :'db') WHERE NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = :'db')
     \gexec
     SQL
-    [ "${DIPLOI_AGENT_ENABLED:-true}" != true ] || enable_mcp_before_start
+    write_settings_before_start
     touch /diploi-state/database-ready
     log "Database ready, n8n starts"
 

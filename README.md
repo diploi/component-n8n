@@ -10,7 +10,7 @@ Start a demo, no card required https://diploi.com/component/n8n
 
 Uses the official [n8nio/n8n](https://hub.docker.com/r/n8nio/n8n) Docker image as it is (n8n 2.45). The version is the `images[].image` tag in `diploi.yaml`.
 
-Requires **PostgreSQL**, which is included as a Diploi add-on. The AI nodes and n8n Assistant run on the Diploi AI proxy, so they work without an API key of your own.
+Requires **PostgreSQL**, which is included as a Diploi add-on. The AI nodes run on the Diploi AI proxy, so they work without an API key of your own.
 
 ## Operation
 
@@ -32,7 +32,7 @@ Change both in n8n's personal settings after the first login. The Setup tab's va
 
 ### First start
 
-A `setup` container runs beside n8n in its pod. On every start it creates n8n's own database (**Database name** in the Setup tab, default `n8n`) on the PostgreSQL add-on if it is missing, and n8n waits for that. When n8n first starts on an empty database, the container also creates the owner account from **Admin login**, and switches on n8n's MCP server and its **Auto-expose new workflows** setting for the [Prompt tab](#prompt-tab).
+A `setup` container runs beside n8n in its pod. On every start it creates n8n's own database (**Database name** in the Setup tab, default `n8n`) on the PostgreSQL add-on if it is missing, and n8n waits for that. When n8n first starts on an empty database, the container also creates the owner account from **Admin login**. It switches n8n Assistant off (see [AI](#ai)), and switches on n8n's MCP server and its **Auto-expose new workflows** setting for the [Prompt tab](#prompt-tab). A deployment set up by an earlier version of this component gets these settings on its next start, unless its owner already chose them.
 
 On every start it then gives the prompt tab's agent its access and writes the **Diploi AI** credential, see [AI](#ai). The script lives in the component's helm files (`.diploi/helm/app-scripts.yaml`), so it is updated with the component rather than being frozen in the user project. The `setup` container is a plain Alpine that installs `psql`, `jq` and `curl` when it starts, which takes a few seconds.
 
@@ -40,12 +40,13 @@ If the setup fails, the `setup` container's log says why. Finish it in the brows
 
 ### AI
 
-The AI features use the Diploi AI proxy, and their use is billed to your Diploi account as AI usage. The **AI** switch in the Setup tab turns both of them on or off.
+The Anthropic credential **Diploi AI** uses the Diploi AI proxy, and its use is billed to your Diploi account as AI usage. Every start writes it with the proxy's address and the deployment's token, which changes whenever the deployment starts. Choose it in the Anthropic nodes, such as the Anthropic Chat Model of an AI Agent, and pick a Claude model, such as `claude-sonnet-5-5` or `claude-haiku-5-5`.
 
-- **The Diploi AI credential.** Every start writes the Anthropic credential **Diploi AI**, with the proxy's address and the deployment's token. Choose it in the Anthropic nodes, such as the Anthropic Chat Model of an AI Agent, and pick a Claude model, such as `claude-sonnet-5-5` or `claude-haiku-5-5`. Keep its name: a start that finds no credential of that name creates a new one, and it overwrites changes to its key and address. Turning the switch off deletes it.
-- **n8n Assistant**, n8n's own AI chat, runs on the model in **Assistant model**, default `anthropic/claude-sonnet-5-5`. It needs a sandbox to build workflows, which this component does not set up, so ask the agent in the prompt tab to build them instead. The model is set through environment variables, so n8n's AI settings show it as read-only.
+- **Keep its name.** A start that finds no credential of that name creates a new one, and a start overwrites changes to its key and address.
+- **To switch it off**, turn off **AI** in the Setup tab. The credential is deleted.
+- **To use your own Anthropic key**, create an Anthropic credential of your own.
 
-To use your own Anthropic key, create an Anthropic credential of your own. For n8n Assistant, turn the switch off and set the model in n8n's AI settings.
+**n8n Assistant**, n8n's own AI chat, is switched off. It needs a code sandbox, which this component does not set up: n8n Sandbox, a privileged Docker-in-Docker container, or the paid Daytona service. Without one, n8n opens the Assistant's setup instead of the workflows and never opens its chat. Ask the agent in the [Prompt tab](#prompt-tab) to build and fix workflows instead. To use the Assistant with a sandbox of your own, switch it on in n8n's settings. Its model settings accept an Anthropic credential, such as **Diploi AI**.
 
 ### Prompt tab
 
@@ -71,16 +72,15 @@ The component has no volumes, so what n8n writes to its own disk is lost when it
 
 The deployment's **Setup** tab holds the values a project chooses. Each is also an environment variable of the containers.
 
-| Group       | Field           | Variable                 | Description                                                                                 |
-| ----------- | --------------- | ------------------------ | ------------------------------------------------------------------------------------------- |
-| Admin login | Email           | `INITIAL_ADMIN_EMAIL`    | Email address of the owner account created on the first start. Default `admin@example.com`. |
-| Admin login | Password        | `INITIAL_ADMIN_PASSWORD` | Password of that account. Generated per project.                                            |
-| Database    | Database name   | `DB_POSTGRESDB_DATABASE` | n8n's own database on the PostgreSQL add-on. Default `n8n`.                                 |
-| Keys        | Encryption key  | `N8N_ENCRYPTION_KEY`     | Encrypts n8n's credentials. Generated per project. Never change it.                         |
-| AI          | the switch      | `DIPLOI_AI_ENABLED`      | The Diploi AI credential and n8n Assistant, through the Diploi AI proxy. Default on.        |
-| AI          | Assistant model | `DIPLOI_AI_MODEL`        | The model n8n Assistant runs on. Default `anthropic/claude-sonnet-5-5`.                     |
-| Prompt tab  | the switch      | `DIPLOI_AGENT_ENABLED`   | Whether the prompt tab's agent may use n8n's MCP server. Default on.                        |
-| Prompt tab  | Access token    | `N8N_AGENT_TOKEN`        | The agent's token for the MCP server. Generated per project.                                |
+| Group       | Field          | Variable                 | Description                                                                                 |
+| ----------- | -------------- | ------------------------ | ------------------------------------------------------------------------------------------- |
+| Admin login | Email          | `INITIAL_ADMIN_EMAIL`    | Email address of the owner account created on the first start. Default `admin@example.com`. |
+| Admin login | Password       | `INITIAL_ADMIN_PASSWORD` | Password of that account. Generated per project.                                            |
+| Database    | Database name  | `DB_POSTGRESDB_DATABASE` | n8n's own database on the PostgreSQL add-on. Default `n8n`.                                 |
+| Keys        | Encryption key | `N8N_ENCRYPTION_KEY`     | Encrypts n8n's credentials. Generated per project. Never change it.                         |
+| AI          | the switch     | `DIPLOI_AI_ENABLED`      | The Diploi AI credential, through the Diploi AI proxy. Default on.                          |
+| Prompt tab  | the switch     | `DIPLOI_AGENT_ENABLED`   | Whether the prompt tab's agent may use n8n's MCP server. Default on.                        |
+| Prompt tab  | Access token   | `N8N_AGENT_TOKEN`        | The agent's token for the MCP server. Generated per project.                                |
 
 ### Environment variables
 

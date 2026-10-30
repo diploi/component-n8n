@@ -24,7 +24,9 @@
   change n8n's settings, users or credentials unless the user asks for it.
 - The credential **Diploi AI** (type Anthropic) points the Anthropic nodes, such as the Anthropic Chat Model of an AI
   Agent, at the Diploi AI proxy, billed to the user's Diploi account. Use it for Claude models instead of asking for an
-  API key. n8n Assistant, n8n's own AI chat, runs on the same proxy.
+  API key.
+- n8n Assistant, n8n's own AI chat, is switched off: it needs a code sandbox, which this component does not set up.
+  Build and fix workflows through the MCP server instead.
 - Code nodes cannot read environment variables (`N8N_BLOCK_ENV_ACCESS_IN_NODE` is on by default). Put secrets in
   credentials.
 

@@ -39,15 +39,6 @@ spec:
             - name: {{ .identifier }}
               value: {{ .value | quote }}
             {{- end }}
-            {{- if eq .Values.envMap.DIPLOI_AI_ENABLED.value "true" }}
-            # n8n Assistant through the Diploi AI proxy
-            - name: N8N_INSTANCE_AI_MODEL
-              value: {{ .Values.envMap.DIPLOI_AI_MODEL.value | quote }}
-            - name: N8N_INSTANCE_AI_MODEL_URL
-              value: {{ .Values.envMap.DIPLOI_AI_URL.value | quote }}
-            - name: N8N_INSTANCE_AI_MODEL_API_KEY
-              value: {{ .Values.envMap.DIPLOI_AI_TOKEN.value | quote }}
-            {{- end }}
           # The first start migrates the database, which takes minutes on a small core
           startupProbe:
             httpGet:
