@@ -1,0 +1,213 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-scripts
+  labels:
+    app: app
+data:
+  setup.sh: |
+    #!/bin/sh
+    # Runs beside n8n, in the pod's setup container. Creates n8n's database, which n8n waits for, and on the first start
+    # creates the owner account. Every start then gives the prompt tab's agent access to n8n's MCP server with
+    # N8N_AGENT_TOKEN, and points the credential "Diploi AI" at the Diploi AI proxy, or takes both away. The container
+    # is a plain Alpine, so the tools are installed first.
+    set -eu
+    if [ -z "${BASH_VERSION:-}" ]; then
+      apk add --no-cache bash postgresql-client jq curl >/dev/null
+      exec bash "$0" "$@"
+    fi
+
+    # On stderr, so that a log line inside $(...) still reaches the container log
+    log() {
+      echo "🟩 $(date -u +"%Y-%m-%dT%H:%M:%SZ") $1" >&2
+    }
+
+    # psql as the add-on's superuser
+    pg() {
+      PGPASSWORD="$DB_POSTGRESDB_PASSWORD" psql -h "$DB_POSTGRESDB_HOST" -p "$DB_POSTGRESDB_PORT" -U "$DB_POSTGRESDB_USER" -X -q -v ON_ERROR_STOP=1 "$@"
+    }
+
+    # n8n, in the same pod
+    BASE=http://127.0.0.1:5678
+    API=$BASE/api/v1
+    DB=$DB_POSTGRESDB_DATABASE
+    # The owner's MCP API key the agent uses, and the owner's public API key this script uses while it runs. n8n
+    # generates ids of its own, which never look like these.
+    AGENT_KEY_ID=diploi-agent
+    SETUP_KEY_ID=diploi-setup
+    CREDENTIAL_NAME="Diploi AI"
+
+    # Sends the request to n8n and prints the answer, or logs n8n's error
+    request() {
+      local response
+      if ! response=$(curl -sS --fail-with-body -H 'Content-Type: application/json' "$@"); then
+        log "n8n refused the request: $response"
+        return 1
+      fi
+      echo "$response"
+    }
+
+    # n8n Assistant needs a code sandbox, which this component does not set up, so it starts switched off: n8n would
+    # otherwise open its setup on every login. n8n's MCP server, and exposing new workflows to it, start switched on
+    # for the prompt tab. n8n reads these settings when it starts, so a later start writes them before n8n does, and
+    # leaves a value the owner chose.
+    write_settings_before_start() {
+      local mcp=false
+      [ "${DIPLOI_AGENT_ENABLED:-true}" != true ] || mcp=true
+      pg -d "$DB" -v mcp="$mcp" <<'SQL'
+    SELECT to_regclass('settings') IS NOT NULL AS has_settings
+    \gset
+    \if :has_settings
+    INSERT INTO settings (key, value, "loadOnStartup") VALUES ('instanceAi.settings', '{"enabled": false}', true)
+    ON CONFLICT (key) DO NOTHING;
+    \if :mcp
+    INSERT INTO settings (key, value, "loadOnStartup")
+    VALUES ('mcp.access.enabled', 'true', true), ('mcp.autoExposeNewWorkflows', 'true', true)
+    ON CONFLICT (key) DO NOTHING;
+    \endif
+    \endif
+    SQL
+    }
+
+    # On the first start the settings do not exist before n8n creates its tables, so the owner sets them
+    first_run_setup() {
+      local session
+      log "First start: creating the owner $INITIAL_ADMIN_EMAIL"
+
+      # The session cookie is Secure, which curl only sends over HTTPS, so it is passed on as a header
+      session=$(
+        jq -n --arg email "$INITIAL_ADMIN_EMAIL" --arg password "$INITIAL_ADMIN_PASSWORD" \
+          '{email: $email, firstName: "Admin", lastName: "User", password: $password}' |
+          request -D - -o /dev/null -H 'browser-id: diploi-setup' --data @- "$BASE/rest/owner/setup" |
+          grep -io 'n8n-auth=[^;]*'
+      )
+      request -X PUT -H 'browser-id: diploi-setup' -H "Cookie: $session" \
+        --data '{"enabled": false}' "$BASE/rest/instance-ai/settings" >/dev/null
+      if [ "${DIPLOI_AGENT_ENABLED:-true}" = true ]; then
+        request -X PATCH -H 'browser-id: diploi-setup' -H "Cookie: $session" \
+          --data '{"mcpAccessEnabled": true, "autoExposeNewWorkflows": true}' "$BASE/rest/mcp/settings" >/dev/null
+      fi
+
+      log "First start setup done"
+    }
+
+    # Gives the owner the MCP API key n8n_api_$N8N_AGENT_TOKEN. n8n checks a key with that legacy prefix against its
+    # table only, so the key needs no signature, and it lasts.
+    grant_agent_token() {
+      local token=${N8N_AGENT_TOKEN:-} changed
+      if [ ${#token} -lt 32 ]; then
+        log "N8N_AGENT_TOKEN is shorter than 32 characters, so the prompt tab cannot use n8n"
+        return
+      fi
+
+      changed=$(pg -d "$DB" -tA -v id="$AGENT_KEY_ID" -v key="n8n_api_$token" <<'SQL'
+    INSERT INTO user_api_keys (id, "userId", label, "apiKey", audience, scopes)
+    SELECT :'id', id, 'Diploi agent', :'key', 'mcp-server-api', '[]' FROM "user" WHERE "roleSlug" = 'global:owner'
+    ON CONFLICT (id) DO UPDATE SET "userId" = EXCLUDED."userId", "apiKey" = EXCLUDED."apiKey", "updatedAt" = now()
+    WHERE user_api_keys."userId" <> EXCLUDED."userId" OR user_api_keys."apiKey" <> EXCLUDED."apiKey"
+    RETURNING 'changed'
+    SQL
+      )
+      [ -z "$changed" ] || log "Gave the prompt tab's agent access to n8n's MCP server"
+    }
+
+    # For a deployment that has the prompt tab's access switched off
+    revoke_agent_token() {
+      local revoked
+      revoked=$(pg -d "$DB" -tA -v id="$AGENT_KEY_ID" <<<"DELETE FROM user_api_keys WHERE id = :'id' RETURNING 'revoked'")
+      [ -z "$revoked" ] || log "Took the prompt tab's agent's access to n8n's MCP server away"
+    }
+
+    # n8n encrypts credentials, so they are written through its public API, as the owner with the key SETUP_KEY,
+    # which only lives while this script runs
+    create_setup_key() {
+      SETUP_KEY="n8n_api_$(head -c 32 /dev/urandom | base64 | tr -d '+/=')"
+      pg -d "$DB" -v id="$SETUP_KEY_ID" -v key="$SETUP_KEY" <<'SQL'
+    INSERT INTO user_api_keys (id, "userId", label, "apiKey", audience, scopes)
+    SELECT :'id', id, 'Diploi setup', :'key', 'public-api', '["credential:create", "credential:update", "credential:delete"]'
+    FROM "user" WHERE "roleSlug" = 'global:owner'
+    ON CONFLICT (id) DO UPDATE SET "userId" = EXCLUDED."userId", "apiKey" = EXCLUDED."apiKey"
+    SQL
+    }
+
+    delete_setup_key() {
+      pg -d "$DB" -v id="$SETUP_KEY_ID" <<<"DELETE FROM user_api_keys WHERE id = :'id'"
+    }
+
+    # The id of the credential "Diploi AI", if there is one
+    find_ai_credential() {
+      pg -d "$DB" -tA -v name="$CREDENTIAL_NAME" <<'SQL'
+    SELECT id FROM credentials_entity WHERE type = 'anthropicApi' AND name = :'name' ORDER BY "createdAt" LIMIT 1
+    SQL
+    }
+
+    # The proxy's token changes whenever the deployment starts, so every start writes it again
+    sync_ai_credential() {
+      local id data
+      id=$(find_ai_credential)
+      data=$(jq -n --arg key "$DIPLOI_AI_TOKEN" --arg url "$DIPLOI_AI_URL" '{apiKey: $key, url: $url}')
+      create_setup_key
+
+      if [ -n "$id" ]; then
+        jq -n --argjson data "$data" '{data: $data}' |
+          request -X PATCH -H "X-N8N-API-KEY: $SETUP_KEY" --data @- "$API/credentials/$id" >/dev/null
+      else
+        jq -n --arg name "$CREDENTIAL_NAME" --argjson data "$data" '{name: $name, type: "anthropicApi", data: $data}' |
+          request -H "X-N8N-API-KEY: $SETUP_KEY" --data @- "$API/credentials" >/dev/null
+        log "Created the credential \"$CREDENTIAL_NAME\" for the AI nodes"
+      fi
+    }
+
+    # For a deployment that has the AI switched off
+    remove_ai_credential() {
+      local id
+      id=$(find_ai_credential)
+      [ -n "$id" ] || return 0
+      create_setup_key
+      request -X DELETE -H "X-N8N-API-KEY: $SETUP_KEY" "$API/credentials/$id" >/dev/null
+      log "Deleted the credential \"$CREDENTIAL_NAME\""
+    }
+
+    n8n_setup() {
+      until curl -sf "$BASE/healthz/readiness" >/dev/null; do sleep 5; done
+
+      if [ "$(curl -sSf "$BASE/rest/settings" | jq -r .data.userManagement.showSetupOnFirstLoad)" = true ]; then
+        first_run_setup
+      fi
+      if [ "${DIPLOI_AGENT_ENABLED:-true}" = true ]; then
+        grant_agent_token
+      else
+        revoke_agent_token
+      fi
+      if [ "${DIPLOI_AI_ENABLED:-true}" = true ]; then
+        sync_ai_credential
+      else
+        remove_ai_credential
+      fi
+    }
+
+    log "Waiting for PostgreSQL"
+    until pg -d postgres -c 'SELECT 1' >/dev/null 2>&1; do sleep 2; done
+
+    pg -d postgres -v db="$DB" <<'SQL'
+    SELECT format('CREATE DATABASE %I', :'db') WHERE NOT EXISTS (SELECT 1 FROM pg_database WHERE datname = :'db')
+    \gexec
+    SQL
+    write_settings_before_start
+    touch /diploi-state/database-ready
+    log "Database ready, n8n starts"
+
+    # Not "( ... ) || true": bash ignores set -e inside a command on the left of ||
+    set +e
+    (
+      set -eo pipefail
+      trap 'status=$?; delete_setup_key || true; [ $status -eq 0 ] || log "Setting n8n up failed, see README.md"' EXIT
+      n8n_setup
+    )
+    set -e
+
+    # Waits as PID 1, which only a trap can stop: a kubectl delete or a rolling update sends TERM
+    log "Setup done"
+    trap 'exit 0' TERM
+    sleep infinity &
+    wait $!

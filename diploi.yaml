@@ -3,34 +3,67 @@ type: component
 name: n8n
 description: Official Diploi component for n8n
 
-supportsAdditionalHosts: { serviceName: 'app'}
+supportsAdditionalHosts: { serviceName: 'app' }
 
 hosts:
   - name: n8n
     identifier: app
     port: 5678
 
+images:
+  - identifier: app
+    image: n8nio/n8n:2.45.6
+
 parameterGroups:
-  - name: Connection
-    identifier: postgres
-    description: Superuser & connection configuration
+  - name: Admin login
+    identifier: admin
+    description: The owner account created on the first start. Change both in n8n afterwards.
     parameters:
-      - name: DB_POSTGRESDB_DATABASE
+      - name: Email
+        identifier: INITIAL_ADMIN_EMAIL
+        defaultValue: admin@example.com
+        type: string
+      - name: Password
+        identifier: INITIAL_ADMIN_PASSWORD
+        # The trailing capital and digit meet n8n's password rule
+        defaultValue: '${generate-random-password:16}A0'
+        type: secret
+
+  - name: Database
+    identifier: postgres
+    description: n8n's own database on the PostgreSQL add-on
+    parameters:
+      - name: Database name
         identifier: DB_POSTGRESDB_DATABASE
         defaultValue: n8n
         type: string
-      - name: N8N_HOST
-        identifier: N8N_HOST
-        defaultValue: http://app.${DIPLOI_NAMESPACE}
-        type: string
-        readOnly: true
-  - name: Config
+
+  - name: Keys
     identifier: config
-    description: n8n onfiguration variables
+    description: Generated for this project. Never change it, n8n could no longer read the credentials it encrypted with it.
     parameters:
-      - name: N8N_ENCRYPTION_KEY
+      - name: Encryption key
         identifier: N8N_ENCRYPTION_KEY
         defaultValue: '${generate-random-password:42}'
+        type: secret
+
+  - name: AI
+    identifier: DIPLOI_AI_ENABLED
+    description: The "Diploi AI" credential for AI nodes, through the Diploi AI proxy. Billed to your account as AI usage.
+    toggleable: true
+    defaultValue: true
+    parameters: []
+
+  - name: Prompt tab
+    identifier: DIPLOI_AGENT_ENABLED
+    description: Let the agent in the Diploi prompt tab use n8n's MCP server, as the owner
+    toggleable: true
+    defaultValue: true
+    parameters:
+      - name: Access token
+        description: The token the agent reaches the MCP server with. The Diploi core adds it to the agent's requests.
+        identifier: N8N_AGENT_TOKEN
+        defaultValue: '${generate-random-bytes:32}'
         type: secret
 
 environmentVariables:
@@ -40,18 +73,40 @@ environmentVariables:
     defaultValue: public
   - identifier: TZ
     defaultValue: UTC
+  - identifier: N8N_EDITOR_BASE_URL
+    defaultValue: '${APP_ENDPOINT}'
+  - identifier: N8N_WEBHOOK_URL
+    defaultValue: '${APP_ENDPOINT}'
   - identifier: N8N_SAMESITE_COOKIE
     defaultValue: none
   - identifier: N8N_SECURE_COOKIE
     defaultValue: true
-    
-images:
-  - identifier: app
-    prebuildImage: public.ecr.aws/p8t2q7f4/diploi/component-n8n:[tag]
+  - identifier: N8N_VERSION_NOTIFICATIONS_ENABLED
+    defaultValue: false
+  # n8n's MCP server limits requests per address, and every request of the prompt tab's agent comes from the Diploi core's
+  - identifier: N8N_MCP_SERVER_RATE_LIMIT
+    defaultValue: 0
+  # The Code node runs in the pod's runners container, which signs in to n8n with the token
+  - identifier: N8N_RUNNERS_MODE
+    defaultValue: external
+  - identifier: N8N_RUNNERS_AUTH_TOKEN
+    defaultValue: '${generate-random-bytes:32}'
+    type: secret
+  # The Diploi AI proxy, for the credential "Diploi AI"
+  - identifier: DIPLOI_AI_URL
+    defaultValue: '{diploi-ai-gateway-url}/anthropic'
+  - identifier: DIPLOI_AI_TOKEN
+    defaultValue: '{diploi-ai-gateway-token}'
+
+# n8n checks a key with the legacy prefix n8n_api_ against its table only. The setup container writes this one there.
+mcp:
+  - url: 'http://app.${DIPLOI_NAMESPACE}:5678/mcp-server/http'
+    headers:
+      Authorization: 'Bearer n8n_api_${N8N_AGENT_TOKEN}'
 
 dependencies:
   - identifier: postgres
-    package: https://github.com/diploi/addon-postgres#v17.2
+    package: https://github.com/diploi/addon-postgres#v18.3
     env:
       include:
         - POSTGRES_HOST:DB_POSTGRESDB_HOST
