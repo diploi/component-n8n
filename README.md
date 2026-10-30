@@ -86,7 +86,7 @@ The deployment's **Setup** tab holds the values a project chooses. Each is also 
 
 | Variable                                   | Description                                                                                                                      |
 | ------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
-| `N8N_EDITOR_BASE_URL`, `WEBHOOK_URL`       | The public address of n8n, from the component's host. Used in links, OAuth and webhook URLs.                                     |
+| `N8N_EDITOR_BASE_URL`, `N8N_WEBHOOK_URL`   | The public address of n8n, from the component's host. Used in links, OAuth and webhook URLs.                                     |
 | `N8N_SECURE_COOKIE`, `N8N_SAMESITE_COOKIE` | `true` and `none`: browsers send the login cookie over HTTPS only, also to n8n embedded in another site.                         |
 | `N8N_VERSION_NOTIFICATIONS_ENABLED`        | `false`. Diploi decides the n8n version.                                                                                         |
 | `N8N_MCP_SERVER_RATE_LIMIT`                | `0`. Every request of the prompt tab's agent comes from the Diploi core's address, which n8n's limit per address would throttle. |

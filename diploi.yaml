@@ -80,7 +80,7 @@ environmentVariables:
     defaultValue: UTC
   - identifier: N8N_EDITOR_BASE_URL
     defaultValue: '${APP_ENDPOINT}'
-  - identifier: WEBHOOK_URL
+  - identifier: N8N_WEBHOOK_URL
     defaultValue: '${APP_ENDPOINT}'
   - identifier: N8N_SAMESITE_COOKIE
     defaultValue: none

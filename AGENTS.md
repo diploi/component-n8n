@@ -9,7 +9,7 @@
   (`DB_POSTGRESDB_DATABASE`, default `n8n`, on the `postgres` add-on), not in this repository. Change them in n8n's
   editor or through n8n's MCP server, never by editing that database.
 - Configuration is environment variables: the deployment's **Setup** tab (`README.md` lists its fields) and its
-  **Environment** tab. Every `N8N_*`, `DB_*` and `WEBHOOK_URL` variable is an
+  **Environment** tab. Every `N8N_*` and `DB_*` variable is an
   [n8n setting](https://docs.n8n.io/hosting/configuration/environment-variables/). A change takes effect when the
   component restarts.
 - Serves on port **5678** in every stage. Every stage runs the same image. The pod has a second container, `setup`,
