@@ -9,10 +9,14 @@ spec:
     matchLabels:
       app: app
   strategy:
+  {{- if eq .Values.stage "development"}}
+    type: Recreate
+  {{- else }}
     type: RollingUpdate
     rollingUpdate:
       maxUnavailable: 25%
       maxSurge: 25%
+  {{- end }}
   replicas: {{ ternary 1 0 .Values.enabled }}
   template:
     metadata:
@@ -22,45 +26,12 @@ spec:
       terminationGracePeriodSeconds: 10
       imagePullSecrets:
         - name: diploi-pull-secret
-      initContainers:
-        - name: create-db
-          image: postgres:18.3
-          securityContext:
-            runAsUser: 0
-            runAsGroup: 0
-          env:
-            - name: PGPASSWORD
-              value: "{{ .Values.envMap.DB_POSTGRESDB_PASSWORD.value }}"
-          command:
-            - sh
-            - -c
-            - |
-              set -e
-
-              echo "Checking if database {{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }} exists..."
-
-              if psql "host={{ .Values.envMap.DB_POSTGRESDB_HOST.value }} \
-                      user={{ .Values.envMap.DB_POSTGRESDB_USER.value }} \
-                      dbname=postgres \
-                      connect_timeout=3" \
-                  -tAc "SELECT 1 FROM pg_database WHERE datname='{{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}'" \
-                | grep -q 1; then
-                echo "Database already exists, exiting initContainer"
-                exit 0
-              fi
-              
-              echo "Database does not exist, creating database {{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}..."
-              
-              psql "host={{ .Values.envMap.DB_POSTGRESDB_HOST.value }} \
-                    user={{ .Values.envMap.DB_POSTGRESDB_USER.value }} \
-                    dbname=postgres \
-                    connect_timeout=3" \
-                -c "CREATE DATABASE {{ .Values.envMap.DB_POSTGRESDB_DATABASE.value }}"
-
       containers:
         - name: app
           image: {{ .Values.images.app }}
           imagePullPolicy: Always
+          # n8n needs its database, which the setup container creates. tini and the entrypoint are the image's own.
+          command: ['tini', '--', '/bin/sh', '-c', 'until [ -f /diploi-state/database-ready ]; do sleep 1; done; exec /docker-entrypoint.sh']
           ports:
             - containerPort: 5678
           env:
@@ -68,9 +39,44 @@ spec:
             - name: {{ .identifier }}
               value: {{ .value | quote }}
             {{- end }}
-            - name: APP_PUBLIC_URL
-              value: {{ .Values.hosts.app }}
-            - name: WEBHOOK_URL
-              value: https://{{ .Values.hosts.app }}
-            - name: STAGE
-              value: {{ .Values.stage }}
+            {{- if eq .Values.envMap.DIPLOI_AI_ENABLED.value "true" }}
+            # n8n Assistant through the Diploi AI proxy
+            - name: N8N_INSTANCE_AI_MODEL
+              value: {{ .Values.envMap.DIPLOI_AI_MODEL.value | quote }}
+            - name: N8N_INSTANCE_AI_MODEL_URL
+              value: {{ .Values.envMap.DIPLOI_AI_URL.value | quote }}
+            - name: N8N_INSTANCE_AI_MODEL_API_KEY
+              value: {{ .Values.envMap.DIPLOI_AI_TOKEN.value | quote }}
+            {{- end }}
+          # The first start migrates the database, which takes minutes on a small core
+          startupProbe:
+            httpGet:
+              path: /healthz/readiness
+              port: 5678
+            periodSeconds: 5
+            failureThreshold: 120
+          volumeMounts:
+            - name: state
+              mountPath: /diploi-state
+        # Creates the database, sets n8n up on its first start and gives the prompt tab's agent and the AI nodes access, then waits
+        - name: setup
+          image: alpine:3.22
+          imagePullPolicy: IfNotPresent
+          command: ['/bin/sh', '/diploi/setup.sh']
+          env:
+            {{- range .Values.env }}
+            - name: {{ .identifier }}
+              value: {{ .value | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: scripts
+              mountPath: /diploi
+              readOnly: true
+            - name: state
+              mountPath: /diploi-state
+      volumes:
+        - name: scripts
+          configMap:
+            name: app-scripts
+        - name: state
+          emptyDir: {}
