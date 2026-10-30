@@ -67,12 +67,11 @@ The runners keep n8n's defaults: Python code cannot import modules, not even fro
 
 ### Storage
 
-n8n keeps workflows, credentials and executions in its PostgreSQL database. Back up the add-on to back up n8n.
+n8n keeps all of its data in its PostgreSQL database, so the component has no volumes. Back up the add-on to back up n8n.
 
-The component has no volumes, so what n8n writes to its own disk is lost when it restarts:
-
-- Binary data of executions, such as files a workflow downloaded. Set `N8N_DEFAULT_BINARY_DATA_MODE` to `database` in the **Environment** tab to keep it in PostgreSQL.
-- Community nodes installed in the editor. Set `N8N_REINSTALL_MISSING_PACKAGES` to `true` to have n8n install them again when it starts.
+- **Files** that workflows download or create are stored in PostgreSQL too, up to 512 MB each (`N8N_DEFAULT_BINARY_DATA_MODE` is `database`). n8n deletes them with their executions, which it prunes after 14 days, or beyond 10,000, by default.
+- **Community nodes** installed in the editor are lost from the disk when n8n restarts, so n8n installs them again from npm every time it starts (`N8N_REINSTALL_MISSING_PACKAGES`), which makes the start a little slower.
+- n8n's event log, which it reads to recover executions that were running when it crashed, is lost when it restarts.
 
 ### Setup tab
 
@@ -90,15 +89,16 @@ The deployment's **Setup** tab holds the values a project chooses. Each is also 
 
 ### Environment variables
 
-| Variable                                     | Description                                                                                                                                       |
-| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `N8N_EDITOR_BASE_URL`, `N8N_WEBHOOK_URL`     | The public address of n8n, from the component's host. Used in links, OAuth and webhook URLs.                                                      |
-| `N8N_SECURE_COOKIE`, `N8N_SAMESITE_COOKIE`   | `true` and `none`: browsers send the login cookie over HTTPS only, also to n8n embedded in another site.                                          |
-| `N8N_VERSION_NOTIFICATIONS_ENABLED`          | `false`. Diploi decides the n8n version.                                                                                                          |
-| `N8N_MCP_SERVER_RATE_LIMIT`                  | `0`. Every request of the prompt tab's agent comes from the Diploi core's address, which n8n's limit per address would throttle.                  |
-| `N8N_RUNNERS_MODE`, `N8N_RUNNERS_AUTH_TOKEN` | `external`, and a token generated per project: the [Code node](#code-node) runs in the `runners` container, which signs in to n8n with the token. |
-| `DIPLOI_AI_URL`, `DIPLOI_AI_TOKEN`           | The Diploi AI proxy, and the deployment's token for it, which changes whenever the deployment starts.                                             |
-| `DB_TYPE`, `DB_POSTGRESDB_SCHEMA`, `TZ`      | `postgresdb`, `public` and `UTC`.                                                                                                                 |
+| Variable                                                         | Description                                                                                                                                       |
+| ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `N8N_EDITOR_BASE_URL`, `N8N_WEBHOOK_URL`                         | The public address of n8n, from the component's host. Used in links, OAuth and webhook URLs.                                                      |
+| `N8N_SECURE_COOKIE`, `N8N_SAMESITE_COOKIE`                       | `true` and `none`: browsers send the login cookie over HTTPS only, also to n8n embedded in another site.                                          |
+| `N8N_VERSION_NOTIFICATIONS_ENABLED`                              | `false`. Diploi decides the n8n version.                                                                                                          |
+| `N8N_MCP_SERVER_RATE_LIMIT`                                      | `0`. Every request of the prompt tab's agent comes from the Diploi core's address, which n8n's limit per address would throttle.                  |
+| `N8N_DEFAULT_BINARY_DATA_MODE`, `N8N_REINSTALL_MISSING_PACKAGES` | `database` and `true`, see [Storage](#storage).                                                                                                   |
+| `N8N_RUNNERS_MODE`, `N8N_RUNNERS_AUTH_TOKEN`                     | `external`, and a token generated per project: the [Code node](#code-node) runs in the `runners` container, which signs in to n8n with the token. |
+| `DIPLOI_AI_URL`, `DIPLOI_AI_TOKEN`                               | The Diploi AI proxy, and the deployment's token for it, which changes whenever the deployment starts.                                             |
+| `DB_TYPE`, `DB_POSTGRESDB_SCHEMA`, `TZ`                          | `postgresdb`, `public` and `UTC`.                                                                                                                 |
 
 PostgreSQL connection details (`DB_POSTGRESDB_HOST`, `DB_POSTGRESDB_PORT`, `DB_POSTGRESDB_USER`, `DB_POSTGRESDB_PASSWORD`) come from the PostgreSQL add-on.
 
